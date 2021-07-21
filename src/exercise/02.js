@@ -4,29 +4,53 @@
 import * as React from 'react'
 import {Switch} from '../switch'
 
-function Toggle() {
+function Toggle({children}) {
   const [on, setOn] = React.useState(false)
   const toggle = () => setOn(!on)
 
-  // 🐨 replace this with a call to React.Children.map and map each child in
-  // props.children to a clone of that child with the props they need using
-  // React.cloneElement.
-  // 💰 React.Children.map(props.children, child => {/* return child clone here */})
-  // 📜 https://reactjs.org/docs/react-api.html#reactchildren
-  // 📜 https://reactjs.org/docs/react-api.html#cloneelement
-  return <Switch on={on} onClick={toggle} />
+  // @1
+  // return React.Children.map(children, child => {
+  //   console.log(child)
+  //   return null
+  // })
+
+  return React.Children.map(children, (child, index) => {
+    // @2
+    // This is not allowed, so we have to use React.cloneElement
+    // child.props.on = on
+
+    // @3
+    // const newChild = React.cloneElement(child, { on, toggle })
+    // console.log(newChild)
+    // return newChild
+
+    // @4, used to allow the <span> tag
+    if (typeof child.type === 'string') {
+      return child
+    }
+
+    // @5.b.
+    // if (allowedTypes.includes(child.type)) {
+    const newChild = React.cloneElement(child, {
+      on,
+      toggle,
+    })
+    return newChild
+    // }
+    // return child
+  })
 }
 
-// 🐨 Flesh out each of these components
+const ToggleOn = ({on, children}) => (on ? children : null)
+const ToggleOff = ({on, children}) => (on ? null : children)
+const ToggleButton = ({on, toggle}) => <Switch on={on} onClick={toggle} />
 
-// Accepts `on` and `children` props and returns `children` if `on` is true
-const ToggleOn = () => null
+// @5.a., if we want to restrict the types that can be used
+const allowedTypes = [ToggleOn, ToggleOff, ToggleButton]
 
-// Accepts `on` and `children` props and returns `children` if `on` is false
-const ToggleOff = () => null
-
-// Accepts `on` and `toggle` props and returns the <Switch /> with those props.
-const ToggleButton = () => null
+function MyToggleButton({on, toggle}) {
+  return on ? 'the button is onnn' : 'the button is offf'
+}
 
 function App() {
   return (
@@ -34,7 +58,9 @@ function App() {
       <Toggle>
         <ToggleOn>The button is on</ToggleOn>
         <ToggleOff>The button is off</ToggleOff>
+        <span>Hello</span>
         <ToggleButton />
+        <MyToggleButton />
       </Toggle>
     </div>
   )
